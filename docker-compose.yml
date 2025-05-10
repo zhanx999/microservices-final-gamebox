@@ -1,0 +1,152 @@
+version: '3.8'
+
+services:
+
+
+
+  postgres-user:
+    image: postgres:14
+    container_name: postgres-user
+    restart: always
+    environment:
+      POSTGRES_DB: users_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+    ports:
+      - "5433:5432"
+
+  postgres-game:
+    image: postgres:14
+    container_name: postgres-game
+    restart: always
+    environment:
+      POSTGRES_DB: games_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+    ports:
+      - "5434:5432"
+
+  postgres-review:
+    image: postgres:14
+    container_name: postgres-review
+    restart: always
+    environment:
+      POSTGRES_DB: reviews_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+    ports:
+      - "5435:5432"
+
+  postgres-progress:
+    image: postgres:14
+    container_name: postgres-progress
+    restart: always
+    environment:
+      POSTGRES_DB: progress_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+    ports:
+      - "5436:5432"
+
+  postgres-user-game:
+    image: postgres:14
+    container_name: postgres-user-game
+    restart: always
+    environment:
+      POSTGRES_DB: user_game_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+    ports:
+      - "5437:5432"
+
+  ## ==== DISCOVERY ====
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+
+  ## ==== API GATEWAY ====
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  ## ==== SERVICES ====
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres-user
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-user:5432/users_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  game-service:
+    build: ./game-service
+    container_name: game-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres-game
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-game:5432/games_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  review-service:
+    build: ./review-servcie
+    container_name: review-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres-review
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-review:5432/reviews_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  progress-service:
+    build: ./progress-service
+    container_name: progress-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres-progress
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-progress:5432/progress_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  user-game-service:
+    build: ./user-game-service
+    container_name: user-game-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres-user-game
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-user-game:5432/user_game_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
